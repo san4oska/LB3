@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аналіз Оцінок Студентів</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    .form-group { margin-bottom: 15px; }
+    label { font-weight: bold; }
+    input[type="number"] { width: 50px; text-align: center; }
+    .summary { margin-top: 20px; }
+    .summary h3 { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1>Аналіз Оцінок Студентів</h1>
+    <div class="form-group">
+      <label>Прізвище Студента:</label>
+      <input type="text" v-model="newStudent.surname" placeholder="Enter surname">
+    </div>
+    <div class="form-group">
+      <label>Оцінки (2-5):</label>
+      <div>
+        <input type="number" v-for="(grade, index) in newStudent.grades" v-model.number="newStudent.grades[index]" :key="index" min="2" max="5">
+      </div>
+    </div>
+    <button @click="addStudent">Додати Студента</button>
+    <button @click="generateRandomGrades">Випадкові Оцінки</button>
+
+    <div class="summary">
+      <h3>Зведення</h3>
+      <p>Відмінники: {{ categoryCounts.excellent }}</p>
+      <p>Хорошисти: {{ categoryCounts.good }}</p>
+      <p>Задовільно: {{ categoryCounts.satisfactory }}</p>
+      <p>Неуспішні: {{ categoryCounts.failing }}</p>
+
+      <h4>Неуспішні Студенти</h4>
+      <ul>
+        <li v-for="student in failingStudents" :key="student.surname">{{ student.surname }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        newStudent: {
+          surname: '',
+          grades: [null, null, null, null, null]
+        },
+        students: []
+      },
+      computed: {
+        categoryCounts() {
+          return this.students.reduce((counts, student) => {
+            const category = this.getStudentCategory(student.grades);
+            counts[category]++;
+            return counts;
+          }, { excellent: 0, good: 0, satisfactory: 0, failing: 0 });
+        },
+        failingStudents() {
+          return this.students.filter(student => this.getStudentCategory(student.grades) === 'failing');
+        }
+      },
+      methods: {
+        addStudent() {
+          const category = this.getStudentCategory(this.newStudent.grades);
+          if (category) {
+            this.students.push({ ...this.newStudent });
+            this.resetForm();
+          } else {
+            alert("Please enter valid grades (2-5).");
+          }
+        },
+        generateRandomGrades() {
+          this.newStudent.grades = Array.from({ length: 5 }, () => Math.floor(Math.random() * 4) + 2);
+        },
+        getStudentCategory(grades) {
+          if (grades.some(grade => grade === 2)) return 'failing';
+          if (grades.every(grade => grade === 5)) return 'excellent';
+          if (grades.every(grade => grade === 5 || grade === 4)) return 'good';
+          if (grades.every(grade => grade >= 3)) return 'satisfactory';
+          return null;
+        },
+        resetForm() {
+          this.newStudent.surname = '';
+          this.newStudent.grades = [null, null, null, null, null];
+        }
+      }
+    });
+  </script>
+</body>
+</html>
